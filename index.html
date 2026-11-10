@@ -103,6 +103,8 @@ svg{display:block}
 .cam img{width:100%;height:100%;object-fit:cover;display:block}
 .cam .cap{position:absolute;left:8px;bottom:8px;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.62);font-size:12px;font-variant-numeric:tabular-nums}
 .cam .live{position:absolute;right:8px;top:8px;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.62);font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#ff8a8a}
+.cam.vid{cursor:default;aspect-ratio:16/9}
+.cam iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .cam .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--mu);font-size:13px;text-align:center;padding:10px}
 .near{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin-top:6px}
 .near button{padding:0;border:1px solid var(--ln);border-radius:10px;overflow:hidden;background:#05080b;text-align:left}
@@ -161,6 +163,17 @@ svg{display:block}
 #vcap{color:#cfd8e1;font-size:13px;padding:10px 16px calc(var(--sb) + 12px);text-align:center}
 .vx{position:absolute;top:calc(var(--st) + 10px);right:calc(var(--sr) + 10px);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);display:grid;place-items:center;padding:0;color:#fff}
 .vx svg{width:20px;height:20px}
+#radarCtl{position:fixed;z-index:950;left:50%;transform:translateX(-50%);top:calc(var(--st) + 62px);display:none;align-items:center;gap:8px;height:38px;padding:0 12px 0 5px;border-radius:999px;font-size:12.5px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+#radarCtl.on{display:flex}
+#radarCtl button{width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.12);display:grid;place-items:center;padding:0;flex:0 0 28px}
+#radarCtl button svg{width:13px;height:13px}
+#radarCtl input{width:84px;accent-color:#6aa9ff}
+#radarCtl small{color:var(--mu);font-weight:500}
+@media (min-width:760px){#radarCtl{top:auto;bottom:24px}}
+@media (max-width:759px){body.sheet-open #radarCtl{display:none}}
+.route{padding:10px 12px;border:1px solid var(--ln);border-radius:12px;background:var(--pn2);margin:4px 0 8px;font-size:14px;line-height:1.5}
+.route span{color:var(--mu);font-size:12.5px}
+a.cam{display:block;text-decoration:none;color:inherit;cursor:pointer}
 #toast{position:fixed;z-index:1400;left:50%;bottom:calc(var(--sb) + 76px);transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:10px 14px;border-radius:12px;font-size:13px;width:max-content;max-width:min(92vw,440px);transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:12px}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #toast.act{pointer-events:auto}
@@ -186,7 +199,9 @@ svg{display:block}
  <button class="fab glass" id="bFavs" aria-label="Favoriter"></button>
  <button class="fab glass" id="bLoc" aria-label="Min position"></button>
  <button class="fab glass" id="bHome" aria-label="Visa hela Sverige"></button>
+ <button class="fab glass" id="bStreet" aria-label="Gatubild"></button>
 </nav>
+<div id="radarCtl" class="glass"><button id="rcPlay" aria-label="Spela/pausa radar"></button><input id="rcRange" type="range" min="0" max="11" value="11" aria-label="Radarbild"><span id="rcTime">–</span><small>radar</small></div>
 
 <div id="counts"></div>
 
@@ -266,6 +281,16 @@ const IC={
  warn:'<path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.2M12 17.2v.1"/>',
  police:'<path d="M12 3 4.5 6v5.6c0 4.4 3.1 7.8 7.5 9.4 4.4-1.6 7.5-5 7.5-9.4V6L12 3Z"/><path d="m12 8.3 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.2-2.4 1.2.5-2.6-1.9-1.8 2.6-.4L12 8.3Z"/>',
  infra:'<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6l1-8Z"/>',
+ radar:'<path d="M6.5 15.5a4 4 0 0 1-.4-8A5.5 5.5 0 0 1 16.6 8a4 4 0 0 1 .9 7.5"/><path d="m8.5 19.5 1-2M12 21l1-2M15.5 19.5l1-2"/>',
+ traffic:'<rect x="8" y="2.5" width="8" height="19" rx="3"/><circle cx="12" cy="7" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="17" r="1.5"/>',
+ thermo:'<path d="M14 14.6V5a2 2 0 0 0-4 0v9.6a4 4 0 1 0 4 0Z"/><path d="M12 9v7"/>',
+ snow:'<path d="M12 2.5v19M4 7l16 10M20 7 4 17"/><path d="m9.5 4 2.5 2 2.5-2M9.5 20l2.5-2 2.5 2"/>',
+ gauge:'<path d="M3.5 17.5a8.5 8.5 0 1 1 17 0"/><path d="m12 17.5 4.5-6"/>',
+ street:'<circle cx="12" cy="5" r="2.2"/><path d="M12 8v6.5M8 21l4-6.5 4 6.5M7.5 11h9"/>',
+ pause:'<rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>',
+ playS:'<path d="M7 4.5v15l12.5-7.5Z" fill="currentColor" stroke="none"/>',
+ play:'<circle cx="12" cy="12" r="9"/><path d="m10 8.5 5.5 3.5-5.5 3.5v-7Z" fill="currentColor"/>',
+ webcam:'<circle cx="12" cy="10" r="6.5"/><circle cx="12" cy="10" r="2.4"/><path d="M8 20.5h8M12 16.5v4"/>',
  link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
  target:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>',
  follow:'<path d="m3.5 11 17-7.5-7.5 17-2-7.5-7.5-2Z"/>',
@@ -283,7 +308,11 @@ const SWE_MID=[62.5,16.5];
 
 /* ================= Inställningar & lager ================= */
 const BUILTIN_KEY='d96e7f3ba91941558a99f83484be3e49';
-const SET=Object.assign({tvKey:'',base:'dark',region:true,labels:true},LS.get('set',{}));
+const BUILTIN_CARTO='cb1_563j_1_c142f473b7189dedb9fbda81';
+const SET=Object.assign({tvKey:'',wKey:'',cartoKey:'',ttKey:'',mlyKey:'',proxy:'',base:'dark',region:true,labels:true},LS.get('set',{}));
+if(!SET.cartoKey&&!LS.get('cartoCleared',false))SET.cartoKey=BUILTIN_CARTO;
+const BUILTIN_WINDY='H83A4TZy8JAbszVsNnaRQgHDBHGzYR0z';
+if(!SET.wKey&&!LS.get('wkeyCleared',false))SET.wKey=BUILTIN_WINDY;
 if(!SET.tvKey&&BUILTIN_KEY&&!LS.get('keyCleared',false))SET.tvKey=BUILTIN_KEY;
 const saveSet=()=>LS.set('set',SET);
 
@@ -291,8 +320,10 @@ const SHIP_CATS=[['cargo','Lastfartyg','#3ddc97'],['tanker','Tankfartyg','#ff6b6
 const INFRA_CATS=[['airport','Flygplatser','#e8eef4'],['nuclear','Kärnkraftverk','#ffe066'],['hydro','Vattenkraftverk','#4dabf7'],['wind','Vindkraftparker','#69db7c'],['thermal','Kraft- & värmeverk','#ff922b'],['solar','Solcellsparker','#fcc419'],['plant','Övriga kraftverk','#adb5bd'],['port','Hamnar','#38d9a9'],['substation','Stamnätsstationer','#97a3b0']];
 const SAT_GROUPS=[['stations','Rymdstationer','#ffe08a'],['visual','Ljusstarka','#f4f1c9'],['weather','Vädersatelliter','#8ce99a'],['gnss','Navigering (GPS m.fl.)','#91a7ff'],['starlink','Starlink','#b8c2cc']];
 const FL_CATS=[['ground','På marken','#8b98a7'],['low','Under 10 000 ft','#ffc145'],['high','Över 10 000 ft','#5cc8ff']];
+const RC_CATS=[['2','Besvärligt (risk för halka)','#ffd43b'],['3','Mycket besvärligt','#ff922b'],['4','Is- och snövägbana','#ff5c5c']];
+const FLOW_CATS=[['slow','Under 30 km/h','#ff5c5c'],['mid','30–70 km/h','#ffb547'],['fast','Över 70 km/h','#69db7c']];
 const catMap=a=>Object.fromEntries(a.map(c=>[c[0],{name:c[1],color:c[2]}]));
-const SHIPC=catMap(SHIP_CATS),INFRAC=catMap(INFRA_CATS),SATG=catMap(SAT_GROUPS),FLC=catMap(FL_CATS);
+const RCC=catMap(RC_CATS),FLOWC=catMap(FLOW_CATS),SHIPC=catMap(SHIP_CATS),INFRAC=catMap(INFRA_CATS),SATG=catMap(SAT_GROUPS),FLC=catMap(FL_CATS);
 const FIXED_COL={'Olycka':'#ff5c5c','Vägarbete':'#ff9f43','Hinder':'#ffd43b','Restriktion':'#f783ac','Viktig trafikinformation':'#ff8787','Trafikmeddelande':'#ffe066','Färjor':'#63e6be','Väglagskamera':'#7fdbff','Trafikflödeskamera':'#ff7ab6','Kamera':'#ff7ab6'};
 const PAL=['#ff7ab6','#7fdbff','#ffd166','#3ddc97','#b48cff','#ff9f43','#63e6be','#f783ac','#91a7ff','#ffa8a8','#a9e34b','#e599f7'];
 const CATCOL={};
@@ -300,16 +331,23 @@ function catColor(id,k){const m=CATCOL[id]||(CATCOL[id]=new Map());if(!m.has(k))
 
 const LAYERS={
  cameras:{name:'Kameror',icon:'cam',color:'#ff7ab6',every:10*60000,def:true,key:true,desc:'Trafikverkets väglags- och trafikkameror',load:loadCameras},
+ live:{name:'Livekameror',icon:'play',color:'#ff4d6d',every:0,def:true,desc:'Livevideo från YouTube och CamStreamer i hela Sverige, plus egna',load:loadLive},
+ webcams:{name:'Webbkameror',icon:'webcam',color:'#ffa94d',every:12*3600e3,def:true,wkey:true,desc:'Windy – webbkameror i hela Sverige, vissa med livevideo',load:loadWebcams},
+ radar:{name:'Väderradar',icon:'radar',color:'#6aa9ff',every:10*60000,def:true,overlay:true,noCats:true,desc:'Regn och snö de senaste 2 timmarna, animerat (RainViewer)',load:loadRadar,off:radarClear},
+ traffic:{name:'Trafikläge',icon:'traffic',color:'#ff6b6b',every:3*60000,def:true,overlay:true,noCats:true,tkey:true,desc:'Köer och hastighet på vägarna i realtid (TomTom)',load:loadTraffic,off:trafficClear},
+ roadwx:{name:'Vägväder',icon:'thermo',color:'#74c0fc',every:10*60000,def:false,key:true,noCats:true,desc:'Temperatur, vind, nederbörd och halka vid Trafikverkets väderstationer',load:loadRoadWx},
+ roadcond:{name:'Väglag',icon:'snow',color:'#b197fc',every:15*60000,def:false,key:true,desc:'Halka, snö och besvärligt väglag (Trafikverket)',load:loadRoadCond,cats:RC_CATS},
+ flow:{name:'Trafikflöde',icon:'gauge',color:'#69db7c',every:5*60000,def:false,key:true,desc:'Medelhastighet vid Trafikverkets mätpunkter',load:loadFlow,cats:FLOW_CATS},
  flights:{name:'Flyg',icon:'plane',color:'#5cc8ff',every:12000,def:true,desc:'ADS-B via adsb.lol, airplanes.live eller OpenSky',load:loadFlights,cats:FL_CATS},
  ships:{name:'Fartyg',icon:'ship',color:'#3ddc97',every:60000,def:true,desc:'AIS via Digitraffic – främst Östersjön och Bottniska viken',load:loadShips,cats:SHIP_CATS},
  sats:{name:'Satelliter',icon:'sat',color:'#f4f1c9',every:3*3600e3,def:true,desc:'Banelement från CelesTrak, beräknas live',load:loadSats,cats:SAT_GROUPS},
- trains:{name:'Tåg',icon:'train',color:'#b48cff',every:30000,def:false,key:true,desc:'Tågpositioner från Trafikverket',load:loadTrains},
- events:{name:'Trafikhändelser',icon:'warn',color:'#ffb547',every:5*60000,def:false,key:true,desc:'Olyckor, vägarbeten och hinder från Trafikverket',load:loadEvents},
+ trains:{name:'Tåg',icon:'train',color:'#b48cff',every:30000,def:false,key:true,noCats:true,desc:'Tågpositioner från Trafikverket',load:loadTrains},
+ events:{name:'Trafikhändelser',icon:'warn',color:'#ffb547',every:10*60000,def:false,key:true,desc:'Olyckor, vägarbeten och hinder från Trafikverket',load:loadEvents},
  police:{name:'Polisens händelser',icon:'police',color:'#748ffc',every:5*60000,def:false,desc:'Polisens publicerade händelser, senaste 48 h',load:loadPolice},
  infra:{name:'Infrastruktur',icon:'infra',color:'#c9d3dd',every:0,def:false,desc:'Flygplatser, kraftverk, hamnar och stamnät (OpenStreetMap)',load:loadInfra,cats:INFRA_CATS}
 };
-const PANEL_ORDER=['cameras','flights','ships','sats','trains','events','police','infra'];
-const DRAW_ORDER=['infra','police','events','cameras','trains','ships','flights','sats'];
+const PANEL_ORDER=['cameras','live','webcams','radar','traffic','roadwx','roadcond','flow','flights','ships','sats','trains','events','police','infra'];
+const DRAW_ORDER=['roadcond','infra','flow','police','events','roadwx','webcams','cameras','live','trains','ships','flights','sats'];
 const MOVING=new Set(['flights','ships','sats','trains']);
 const DEF_OFF={infra:['solar','plant'],sats:['weather','gnss','starlink']};
 const ST={};const savedOn=LS.get('on',{});
@@ -318,7 +356,7 @@ const saveOn=()=>LS.set('on',Object.fromEntries(Object.keys(ST).map(k=>[k,ST[k].
 function catsOf(id){
  if(LAYERS[id].cats)return LAYERS[id].cats.map(c=>({k:c[0],name:c[1],color:c[2]}));
  const cnt=new Map();for(const it of ST[id].items)cnt.set(it.cat,(cnt.get(it.cat)||0)+1);
- return[...cnt.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>({k,name:k,color:id==='police'?LAYERS.police.color:catColor(id,k),n}));
+ return[...cnt.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>({k,name:k,color:id==='police'||id==='live'?LAYERS[id].color:id==='webcams'?(k==='Med livevideo'?'#ff4d6d':'#ffa94d'):catColor(id,k),n}));
 }
 function passes(id,it){
  const st=ST[id];
@@ -350,6 +388,8 @@ async function refresh(id,show){
  if(document.hidden){st.stale=true;return;}
  if(st.busy)return;
  if(Ld.key&&!SET.tvKey){st.status='key';st.msg='Kräver Trafikverket-nyckel';uiAll();return;}
+ if(Ld.wkey&&!SET.wKey){st.status='key';st.msg='Kräver gratis Windy-nyckel';uiAll();return;}
+ if(Ld.tkey&&!SET.ttKey){st.status='key';st.msg='Kräver gratis TomTom-nyckel';uiAll();return;}
  st.busy=true;st.stale=false;if(show)progStart(id);if(!st.items.length)st.status='loading';uiAll();
  try{await Ld.load(st);st.status='ok';st.msg='';st.t=Date.now();st.fails=0;}
  catch(e){
@@ -366,7 +406,7 @@ async function refresh(id,show){
 function toggleLayer(id,on){
  const st=ST[id];st.on=on;saveOn();
  if(on){refresh(id,true);}
- else{clearTimeout(st.timer);if(sel&&sel.layer===id)closeSheet();}
+ else{clearTimeout(st.timer);if(LAYERS[id].off)LAYERS[id].off();if(sel&&sel.layer===id)closeSheet();}
  requestDraw();uiAll();
 }
 document.addEventListener('visibilitychange',()=>{
@@ -381,13 +421,15 @@ const FL_PROV=[
  {name:'airplanes.live',kind:'readsb',gap:1100,url:(a,o)=>`https://api.airplanes.live/v2/point/${a}/${o}/250`},
  {name:'OpenSky Network',kind:'opensky',url:()=>'https://opensky-network.org/api/states/all?lamin=54.8&lomin=10.0&lamax=69.6&lomax=25.0'}
 ];
+const viaProxy=u=>SET.proxy?`${SET.proxy.replace(/\/+$/,'')}/?url=${encodeURIComponent(u)}`:u;
 async function loadFlights(st){
  let last;const start=st.prov||0;
  for(let k=0;k<FL_PROV.length;k++){
   const pi=(start+k)%FL_PROV.length,p=FL_PROV[pi];
-  try{const list=await fetchFlights(p);st.prov=pi;st.src=p.name;applyFlights(st,list);return;}
+  try{const list=await fetchFlights(p);st.prov=pi;st.src=p.name+(SET.proxy?' via proxy':'');applyFlights(st,list);return;}
   catch(e){last=e;}
  }
+ if(last&&last.network&&!SET.proxy){const x=new Error('Flygkällorna tillåter inte anrop direkt från webbsidor. Lägg till en gratis flygproxy');x.needKey=true;throw x;}
  throw last;
 }
 async function fetchFlights(p){
@@ -395,7 +437,7 @@ async function fetchFlights(p){
  if(p.kind==='readsb'){
   const m=new Map();
   for(let i=0;i<FL_POINTS.length;i++){
-   const[a,o]=FL_POINTS[i];const j=await getJSON(p.url(a,o),{},20000);
+   const[a,o]=FL_POINTS[i];const j=await getJSON(viaProxy(p.url(a,o)),{},20000);
    for(const x of(j.ac||j.aircraft||[])){
     if(x.lat==null||x.lon==null||!x.hex)continue;if(x.seen_pos!=null&&x.seen_pos>90)continue;
     const pr=m.get(x.hex);if(!pr||(x.seen_pos||0)<(pr.seen_pos||0))m.set(x.hex,x);
@@ -408,7 +450,7 @@ async function fetchFlights(p){
    gs:x.gs!=null?+x.gs:null,trk:x.track!=null?+x.track:(x.true_heading!=null?+x.true_heading:null),vr:x.baro_rate!=null?+x.baro_rate:(x.geom_rate!=null?+x.geom_rate:null),
    sq:x.squawk||'',emerg:x.emergency&&x.emergency!=='none'?x.emergency:'',op:x.ownOp||'',t:now-(x.seen_pos||0)*1000}));
  }
- const j=await getJSON(p.url(),{},25000);progStep('flights',.95);
+ const j=await getJSON(viaProxy(p.url()),{},25000);progStep('flights',.95);
  return(j.states||[]).filter(s=>s[5]!=null&&s[6]!=null).map(s=>({id:String(s[0]),lat:s[6],lon:s[5],cs:(s[1]||'').trim(),reg:'',type:'',desc:'',ground:!!s[8],
   alt:s[7]!=null?s[7]/0.3048:(s[13]!=null?s[13]/0.3048:null),gs:s[9]!=null?s[9]*1.943844:null,trk:s[10],vr:s[11]!=null?s[11]*196.85:null,sq:s[14]||'',emerg:'',country:s[2],t:s[3]?s[3]*1000:now}));
 }
@@ -568,7 +610,8 @@ async function loadTrains(st){
  st.items=[...m.values()];st.src='Trafikverket';
 }
 async function loadEvents(st){
- const arr=await tvQuery('Situation',[{ver:'1.5'},{ver:'1.6'},{ver:'1.4'},{ver:'1.3'},{ver:'1.2'},{ver:'1.5',ns:'road.trafficinfo.new'},{ver:'1.6',ns:'road.trafficinfo.new'}],10000);
+ const SI_INC=['Id','Deleted','Deviation.Id','Deviation.Header','Deviation.Message','Deviation.MessageType','Deviation.MessageCode','Deviation.SeverityText','Deviation.LocationDescriptor','Deviation.RoadNumber','Deviation.StartTime','Deviation.EndTime','Deviation.TrafficRestrictionType','Deviation.WebLink','Deviation.Geometry.Point.WGS84','Deviation.Geometry.WGS84'].map(x=>`<INCLUDE>${x}</INCLUDE>`).join('');
+ const arr=await tvQuery('Situation',[{ver:'1.6',ns:'road.trafficinfo',filter:SI_INC},{ver:'1.6',ns:'road.trafficinfo'},{ver:'1.5',ns:'road.trafficinfo'},{ver:'1.5'}],10000);
  const now=Date.now(),out=[];
  for(const s of arr){
   if(!s||s.Deleted)continue;
@@ -580,6 +623,270 @@ async function loadEvents(st){
   });
  }
  st.items=out;st.src='Trafikverket';
+}
+
+/* ================= Livekameror (YouTube) ================= */
+const PLAYLIST='PLHETx79qoof1DBWrATNJ1yya4ycrx8pTy';
+// [video-id, namn, kanal, lat, lon, ungefärlig plats]  – lat null = ingen fast plats
+const LIVE_LIST=[
+ ['YlMYlOjhF9U','Sweden Now – flera kameror','Sweden Now',null],
+ ['Tr3Gyp21Fi0','Tågresa genom Sverige (ASMR)','Swedish Railcam',null],
+ ['agY6ZaM1G_o','DN-skrapan, Stockholm','MED – Mediateknik',59.3285,18.0225],
+ ['AqkYfZl4vkA','Liseberg, Göteborg','MED – Mediateknik',57.6974,11.9893],
+ ['BGYTM6E5ls8','Falkenberg Strandbad','MED – Mediateknik',56.889,12.4914],
+ ['6DqZ0BoC8-Q','Tullbron, Falkenberg','MED – Mediateknik',56.90297,12.49433],
+ ['TM-2TOHjwKA','Apelviken, Varberg','MED – Mediateknik',57.0846,12.2495],
+ ['IEDF51akADs','Brunnsparken, Varberg','MED – Mediateknik',57.1076,12.2523],
+ ['p49CeURYHUM','Kåsa strand, Varberg','MED – Mediateknik',57.0948,12.2458],
+ ['vNNRzot1bVU','Skateparken Freden, Varberg','MED – Mediateknik',57.0999,12.2554],
+ ['7TVhopVz3Gg','Stormhuset – Apelviken, Varberg','MED – Mediateknik',57.0814,12.2615],
+ ['3ICTZJlyr2U','Varbergs Motorklubb','MED – Mediateknik',57.1514,12.2825],
+ ['fp39XWPMqag','Varbergs Stadshotell – Fästningen','MED – Mediateknik',57.1065,12.2498],
+ ['BMTxMn6IYBQ','Varbergs torg','MED – Mediateknik',57.1068,12.2511],
+ ['DNGseCqB6hU','FalkPadel, Falkenberg','MEDcast – FalkPadel',56.9288,12.4336],
+ ['rmhwCwnCF9E','Gekås köstatus, Ullared','Gekås Ullared',57.1339,12.7144],
+ ['HngtbIsM3VI','Gekås varuhusentré, Ullared','Gekås Ullared',57.1352,12.7166],
+ ['Dnw_l8f9rUc','Arvidsjaur','Live Arvidsjaur',65.5921,19.1803],
+ ['v7wWIO7brSM','Stora torg, Kristianstad','Bredband i Kristianstad',56.03,14.1565],
+ ['85OM8_W_mag','Trelleborg','Trelleborgs kommun',55.3685,13.158,1],
+ ['vQ3IGhbe8xk','Apelviken, Varberg (Destination Apelviken)','Destination Apelviken',57.0855,12.2545,1],
+ ['XqyZwULNt2E','Poolviken, Varberg','Destination Apelviken',57.0825,12.2425,1],
+ ['3-KUsGr610k','Solviken, Varberg','Destination Apelviken',57.079,12.239,1],
+ ['EnHrZYrbboA','Björkliden Hotel Fjället','Björkliden Lapland Resorts',68.4068,18.6757],
+ ['0pE2DNIcqoI','Björkliden Hotel Fjället (2)','Björkliden Lapland Resorts',68.4066,18.6872],
+ ['lBUlkp8U1wA','Stöten, Sälen – Farfars Fartvind','Webbkameror',61.27,12.898,1],
+ ['soWOVfF5eDg','Stöten, Sälen – World Cup-backen','Webbkameror',61.2662,12.8872],
+ ['fz71ucMuO2U','Rengsfallet, Valsjöbyn','Webbkameror',64.0616,14.1144],
+ ['lvIdpN-oF40','Storkar i Fulltofta storkhägn','Webbkameror',55.883,13.642,1],
+ ['0Lp0Nzc4eAc','Norrbyströmmen – flugfiske','Webbkameror',null],
+ ['-av1ojd_JkI','Bin & fjärilar','Webbkameror',null],
+ ['yv06WOu3kYM','Store Mosse nationalpark','Webbkameror',57.285,13.93,1],
+ ['ka04MQWMlI8','OnlyHens – hönskamera','OnlyHens',null],
+ ['kHDxplJnHPM','Granens tid, Östersund','Granens Tid',63.1719,14.6035],
+ ['feqc0yjfEnA','Vår Frälsares katolska församling, Malmö','Vår Frälsares församling',55.595,13.004,1],
+ ['Hv0WdxvG05k','Uddevalla','ITConnect',58.3493,11.938,1],
+ ['J0HyVwTRJvI','Olofsbo strand, Falkenberg','MEDview',56.9181,12.3861],
+ ['oh_YWjN-dAA','Hovs hallar, Båstad','MEDview',56.4733,12.7036,1],
+ ['Pe3u-I9-BS4','Stormhuset, Apelviken (surfklubben)','Varbergs Förenade Surfare',57.0817,12.2623],
+ ['asYoYsQu42k','Flottsbro, Huddinge','MEDview',59.2335,17.889,1],
+ ['vlmI7v4luR4','Läjets camping – receptionen, Varberg','MEDview',57.0729,12.2816],
+ ['sm5R2bv0rO8','Läjets camping – La Terraza, Varberg','MEDview',57.0722,12.2802],
+ ['nGNv5DAmibc','Getterön marina, Varberg','Getterön Marina',57.124,12.2255,1],
+ ['1yE07bZuWBc','Hotell Strana, Hälleviksstrand','MEDview',58.13,11.443,1],
+ ['pn5Myd_HbPc','Växjö golfklubb','MEDview',56.87,14.8,1],
+ ['G4eKyHZDz6s','Göteborgs golfklubb, Hovås','MEDview',57.6105,11.9374,1],
+ ['PL_JFOAg1RA','Göteborgs golfklubb (kamera 2)','MEDview',57.6111,11.9386,1],
+ ['N-qY4Qz1G7c','Halmstad golfklubb, Tylösand','MEDview',56.6495,12.738],
+ ['V8-bty0pe88','Skrea strand, Falkenberg','Falkenberg Energi',56.8832,12.5048],
+ ['FERBX8ylTUc','Värnamo golfklubb','MEDview',57.2256,14.1465],
+ ['AUIjZB9QcxE','Värnamo golfklubb (kamera 2)','MEDview',57.2261,14.1476],
+ ['1JLI_ZbgXx0','Fjällbacka golfklubb','MEDview',58.6152,11.2909],
+ ['xrdLSLipQ1g','Hofgårds golfklubb, Varberg','MEDview',57.147,12.4815],
+ ['QTfaHCQ9Ft4','Falkenbergs golfklubb','MEDview',56.905,12.6,1],
+ ['3Kbs_0TGTgo','Falkenbergs golfklubb (kamera 2)','MEDview',56.9055,12.6012,1],
+ ['V0TzgcHU7xA','Björnhults golfklubb, Falkenberg','MEDview',56.955,12.49,1],
+ ['0t7wwNDGlIo','Varbergs golfklubb – Västra banan','MEDview',57.0643,12.3499],
+ ['sGXiqAocRBk','Varbergs golfklubb – Västra banan (kamera 2)','MEDview',57.0648,12.351],
+ ['KMQKhWiUNPk','Varbergs golfklubb – Östra banan','MEDview',57.12,12.4666],
+ ['JGXhj9Bskwo','Varbergs golfklubb – Östra banan (kamera 2)','MEDview',57.1205,12.4677],
+ ['9wxPPTIrC8k','Haverdals golfklubb','Haverdals GK',56.7156,12.7054],
+ ['qDT5e6tg0q4','Ringenäs golfklubb','Ringenäs Golf',56.6869,12.7167],
+ ['vZdKeVvZbTg','Golfarenan, Halmstad','GolfArena',56.6818,12.7283],
+ ['9QPyT3GTyl8','Jönköping','Vädernytt',57.7826,14.1618,1],
+ ['5A7JI6saAp4','Arjeplog – sjön Hornavan','YouTube',66.0505,17.8892,1],
+ ['cs:LvPnXYqj2UJJdYAAuhhJ0lQu01FVM2d7FZak8zIf','Hertingforsen, Falkenberg','Falkenberg Energi',56.9004,12.52],
+ ['cs:i1Ec3JPGreafhIeRdOBI9jt3r1O5j1QzJGDQMgrc','Lund – Axis Experience Center','Axis Communications',55.7185,13.2198],
+ ['cs:mx6pUXOTQPsDz2wv20bEJATahI10sDGVt5G91BkD','SkiStar Sälen – Lindvallen','SkiStar',61.1641,13.1894],
+ ['cs:Ac40d3kjZDyFlKvwKPxNBJnovbnZfepU8pzRv3tm','Böda sand, Öland','Böda Sand',57.2741,17.0513],
+ ['cs:sfOuBhBQZ7ndXM9LDOuwSuyGwOtWj1iUTBmgo7Et','Utsikt över Anåfjället, Härjedalen','CamStreamer',62.57,12.66,1],
+ ['cs:Q4qwgp0lQ7w7gMw3gYc5jrVV1n952pk9dOG9tWKi','Tällberg – Tallbergsgården, Siljan','Tallbergsgården',60.8236,14.9943],
+ ['cs:1lFPiMrnEk3EeOHXEbg005qLrcACS6ry8Iudnxbu','Lidingö golfklubb','Lidingö GK',59.3793,18.1272],
+ ['cs:IhqjQDisbuWQa1YCWcDOnHROfbB8tXD6WuqhKhCq','Naturum Getterön, Varberg','Naturum Getterön',57.1265,12.2525],
+ ['cs:UjlOpZ5zs1sfnqkVrMLICg0YqOSaSKzNI3xLL6nV','Tänndalen','Tänndalen',62.5436,12.3325],
+ ['zGi4rQIx_UQ','Tåg genom Sverige (förarhytt)','Swedish Railcam',null],
+ ['7hbfZxlLUq4','Tågresa i Sverige','Swedish Railcam',null],
+ ['KAKHMvU6WrM','Förarhyttsvy från Sverige','Swedish Railcam',null]
+];
+const isCS=v=>/^cs:/.test(v||'');
+const liveId=v=>isCS(v)?'cs-'+v.slice(3):'yt-'+v;
+const BUILTIN_LIVE=LIVE_LIST.filter(r=>r[3]!=null).map(r=>({id:liveId(r[0]),name:r[1],src:r[2],lat:r[3],lon:r[4],approx:!!r[5],yt:r[0]}));
+const ytEmbed=(id,list)=>isCS(id)?`https://camstreamer.com/embed/${encodeURIComponent(id.slice(3))}`:`https://www.youtube-nocookie.com/embed/${id?encodeURIComponent(id):'videoseries'}?${list?`list=${list}&`:''}autoplay=1&mute=1&playsinline=1&rel=0`;
+const liveLink=v=>isCS(v)?['Öppna hos CamStreamer',`https://camstreamer.com/embed/${encodeURIComponent(v.slice(3))}`]:['Öppna på YouTube',`https://www.youtube.com/watch?v=${encodeURIComponent(v)}`];
+function playlistHtml(){
+ return hdr('Alla livekameror',`${LIVE_LIST.length} livesändningar i Sverige`)+`<div class="cam vid"><iframe src="${ytEmbed(null,PLAYLIST)}" title="Sverige LIVE" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+ <p class="note">Överst spelas YouTube-spellistan Sverige LIVE, som dess ägare håller uppdaterad. Tryck på en kamera nedan för att visa den på kartan eller spela den direkt.</p>
+ <div class="list">${LIVE_LIST.map((r,i)=>`<div class="it"><span class="dot" style="background:${r[3]!=null?LAYERS.live.color:'#8b98a7'}"></span><button class="tx" data-act="plv" data-i="${i}"><b>${esc(r[1])}</b><small>${esc(r[2])}${r[3]!=null?'':' · ingen fast plats'}</small></button></div>`).join('')}</div>
+ <div class="acts"><a class="btn" href="https://www.youtube.com/playlist?list=${PLAYLIST}" target="_blank" rel="noopener">${svg('ext')}Öppna spellistan på YouTube</a></div>`;
+}
+function videoHtml(r){const L=liveLink(r[0]);return hdr(r[1],r[2]+' · livevideo')+`<div class="cam vid"><iframe src="${ytEmbed(r[0])}" title="${esc(r[1])}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="acts"><button class="btn" data-act="playlist">${svg('play')}Alla livekameror</button><a class="btn" href="${esc(L[1])}" target="_blank" rel="noopener">${svg('ext')}${esc(L[0])}</a></div>`;}
+function ytId(s){s=String(s||'').trim();const m=/(?:v=|youtu\.be\/|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/.exec(s);if(m)return m[1];return/^[\w-]{11}$/.test(s)?s:null;}
+async function loadLive(st){
+ const all=BUILTIN_LIVE.map(c=>Object.assign({own:false},c)).concat(LS.get('mylive',[]).map(c=>Object.assign({own:true},c)));
+ st.items=all.filter(c=>c&&c.yt&&isFinite(c.lat)&&isFinite(c.lon)).map(c=>({layer:'live',id:String(c.id),name:c.name||'Livekamera',cat:c.own?'Egna':'Sverige LIVE',color:LAYERS.live.color,lat:+c.lat,lon:+c.lon,yt:c.yt,src:c.src||'YouTube',page:c.page||'',own:c.own,approx:!!c.approx}));
+ st.src='YouTube';
+}
+
+/* ================= Webbkameror (Windy) ================= */
+const WINDY='https://api.windy.com/webcams/api/v3/webcams';
+const wHead=()=>({headers:{'x-windy-api-key':SET.wKey}});
+function wErr(e){if(e&&(e.status===401||e.status===403)){const x=new Error('Windy godkände inte nyckeln');x.needKey=true;return x;}return e;}
+function wPlayer(p,k){if(!p)return'';const v=p[k];if(!v)return'';if(typeof v==='string')return v;if(v.available===false)return'';return v.embed||v.link||'';}
+function wItems(d){return d.filter(r=>r[6]!==0).map(r=>{const live=!!r[5];return{layer:'webcams',id:r[0],name:r[3]||'Webbkamera',city:r[4],cat:live?'Med livevideo':'Stillbild & timelapse',live,color:live?'#ff4d6d':'#ffa94d',lat:r[1],lon:r[2]};});}
+async function loadWebcams(st){
+ if(!SET.wKey){const e=new Error('Kräver gratis Windy-nyckel');e.needKey=true;throw e;}
+ const c=LS.get('windy',null);
+ if(c&&c.v===1&&c.k===SET.wKey.slice(0,6)&&c.d&&Date.now()-c.t<12*3600e3){st.items=wItems(c.d);st.src='Windy.com (sparad)';return;}
+ const d=[];let off=0,total=Infinity;
+ while(off<total&&off<10000){
+  let j;try{j=await getJSON(`${WINDY}?countries=SE&limit=50&offset=${off}&include=location,player`,wHead(),30000);}catch(e){if(d.length&&!(e.status===401||e.status===403))break;throw wErr(e);}
+  total=+j.total||0;const arr=j.webcams||[];
+  for(const w of arr){const L=w.location||{};if(L.latitude==null||L.longitude==null)continue;d.push([String(w.webcamId),+(+L.latitude).toFixed(5),+(+L.longitude).toFixed(5),w.title||'',L.city||'',wPlayer(w.player,'live')?1:0,w.status==='inactive'?0:1]);}
+  off+=50;progStep('webcams',total&&isFinite(total)?Math.min(off/total,.98):.5);
+  if(!arr.length)break;await sleep(120);
+ }
+ LS.set('windy',{v:1,t:Date.now(),k:SET.wKey.slice(0,6),d});st.items=wItems(d);st.src='Windy.com';
+}
+async function wDetail(it){
+ try{
+  const j=await getJSON(`${WINDY}/${encodeURIComponent(it.id)}?include=images,player,urls,location`,wHead(),15000);
+  const w=(j&&j.webcams)?j.webcams[0]:j;if(!w)throw new Error('Kameran hittades inte');
+  it.w=w;const im=(w.images&&w.images.current)||{};it.pv=im.preview||im.thumbnail||im.icon||'';
+  it.liveUrl=wPlayer(w.player,'live');it.dayUrl=wPlayer(w.player,'day');it.wurl=(w.urls&&w.urls.detail)||'';it.prov=(w.urls&&w.urls.provider)||'';it.upd=w.lastUpdatedOn?Date.parse(w.lastUpdatedOn):0;
+  if(it.liveUrl&&!it.live){it.live=true;it.cat='Med livevideo';it.color='#ff4d6d';}
+  if(!sel||sel.item!==it||sheetMode!=='detail')return;
+  if(it.liveUrl)wPlay(it,'live');else wShowImg(it);
+  const pb=$('#wcBtns');if(pb)pb.innerHTML=(it.liveUrl?`<button class="btn pri" data-act="wplay" data-k="live">${svg('play')}Livevideo</button>`:'')+(it.dayUrl?`<button class="btn" data-act="wplay" data-k="day">${svg('play')}Timelapse 24 h</button>`:'')+(it.pv?`<button class="btn" data-act="wplay" data-k="img">Stillbild</button>`:'');
+  refreshDetail();
+ }catch(e){const box=$('#wcBox'),x=wErr(e);if(box&&sel&&sel.item===it)box.innerHTML=`<div class="ph">${esc(x.needKey?'Windy godkände inte nyckeln':'Kunde inte hämta kameran: '+errText(e))}</div>`;}
+}
+function wShowImg(it){const box=$('#wcBox');if(!box)return;box.innerHTML=it.pv?`<img alt="" src="${esc(it.pv)}">${it.upd?`<span class="cap">${esc(when(it.upd))}</span>`:''}`:'<div class="ph">Ingen stillbild tillgänglig</div>';}
+function wPlay(it,k){const box=$('#wcBox');if(!box)return;if(k==='img')return wShowImg(it);const u=k==='live'?it.liveUrl:it.dayUrl;if(!u)return;box.innerHTML=`<iframe src="${esc(u)}" title="${esc(it.name)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>${k==='live'?'<span class="live">LIVE</span>':''}`;}
+
+/* ================= Väderradar (RainViewer) ================= */
+const RADAR={layers:[],frames:[],idx:0,timer:0,playing:true};
+async function loadRadar(st){
+ const j=await getJSON('https://api.rainviewer.com/public/weather-maps.json',{},15000);
+ const fr=((j.radar&&j.radar.past)||[]).slice(-12);if(!fr.length)throw new Error('Inga radarbilder just nu');
+ const last=RADAR.frames.length?RADAR.frames[RADAR.frames.length-1].time:0;
+ if(!RADAR.layers.length||fr[fr.length-1].time!==last)radarSet(j.host||'https://tilecache.rainviewer.com',fr);
+ st.items=[];st.src='RainViewer';st.note='senaste bild '+hm(fr[fr.length-1].time*1000);
+}
+function radarSet(host,frames){
+ radarClear(true);RADAR.frames=frames;
+ RADAR.layers=frames.map((f,i)=>L.tileLayer(`${host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`,{pane:'ovl',opacity:0,maxNativeZoom:7,maxZoom:19,tileSize:256,attribution:i?'':'Radar: <a href="https://www.rainviewer.com/">RainViewer</a>'}).addTo(map));
+ const r=$('#rcRange');r.max=frames.length-1;radarShow(frames.length-1);$('#radarCtl').classList.add('on');radarLoop();
+}
+function radarShow(i){RADAR.idx=i;RADAR.layers.forEach((l,k)=>l.setOpacity(k===i?.62:0));const f=RADAR.frames[i];if(f){$('#rcTime').textContent=hm(f.time*1000);$('#rcRange').value=i;}$('#rcPlay').innerHTML=svg(RADAR.playing?'pause':'playS');}
+function radarLoop(){clearTimeout(RADAR.timer);if(!RADAR.playing||!RADAR.layers.length)return;const last=RADAR.layers.length-1;RADAR.timer=setTimeout(()=>{radarShow(RADAR.idx>=last?0:RADAR.idx+1);radarLoop();},RADAR.idx>=last?2200:650);}
+function radarClear(keepUi){clearTimeout(RADAR.timer);RADAR.layers.forEach(l=>map.removeLayer(l));RADAR.layers=[];if(!keepUi){RADAR.frames=[];$('#radarCtl').classList.remove('on');}}
+
+/* ================= Trafikläge (TomTom) ================= */
+const TT={layer:null,mode:0,errs:0};
+function ttUrl(){const k=encodeURIComponent(SET.ttKey),dark=SET.base!=='light';return TT.mode===0?`https://api.tomtom.com/maps/orbis/traffic/flow/raster/tile/{z}/{x}/{y}?apiVersion=2&style=${dark?'dark':'light'}&tileSize=256&key=${k}`:`https://api.tomtom.com/traffic/map/4/tile/flow/${dark?'relative0-dark':'relative0'}/{z}/{x}/{y}.png?tileSize=256&key=${k}`;}
+function trafficSet(){
+ trafficClear();if(!SET.ttKey)return;TT.errs=0;
+ TT.layer=L.tileLayer(ttUrl(),{pane:'ovl',maxZoom:19,maxNativeZoom:18,opacity:.9,attribution:'Trafik &copy; <a href="https://www.tomtom.com/">TomTom</a>'}).addTo(map);
+ TT.layer.on('tileerror',()=>{if(++TT.errs<6)return;if(TT.mode===0){TT.mode=1;trafficSet();}else{const st=ST.traffic;st.status='err';st.msg='TomTom svarar inte – kontrollera nyckeln';uiAll();}});
+ TT.layer.on('tileload',()=>{TT.errs=0;});
+}
+function trafficClear(){if(TT.layer){map.removeLayer(TT.layer);TT.layer=null;}}
+async function loadTraffic(st){
+ if(!SET.ttKey){const e=new Error('Kräver gratis TomTom-nyckel');e.needKey=true;throw e;}
+ if(TT.layer&&TT.layer.setUrl)TT.layer.setUrl(ttUrl()+'&_='+Math.floor(Date.now()/60000));else trafficSet();
+ st.items=[];st.src='TomTom';st.note='uppdateras var 3:e minut';
+}
+
+/* ================= Trafikverket: vägväder, väglag, trafikflöde ================= */
+const num=v=>{if(v==null)return null;if(typeof v==='object')v=v.Value!=null?v.Value:v.value;if(v==null||v==='')return null;const n=+v;return isFinite(n)?n:null;};
+function tempColor(t){if(t==null)return'#8b98a7';if(t<=-15)return'#9775fa';if(t<=-5)return'#4dabf7';if(t<0)return'#99e9f2';if(t<5)return'#63e6be';if(t<15)return'#ffd43b';if(t<25)return'#ff922b';return'#ff5c5c';}
+const PREC={noPrecipitation:'Ingen',none:'Ingen',rain:'Regn',drizzle:'Duggregn',snow:'Snö',sleet:'Snöblandat regn',freezingRain:'Underkylt regn',freezingDrizzle:'Underkylt duggregn',hail:'Hagel',snowGrains:'Kornsnö',iceCrystals:'Iskristaller',unknown:'Okänd'};
+async function loadRoadWx(st){
+ const arr=await tvQuery('WeatherMeasurepoint',[{ver:'2.1',ns:'Road.WeatherInfo'},{ver:'2.0',ns:'Road.WeatherInfo'},{ver:'2.1'},{ver:'2.0'},{ver:'1.0',ns:'Road.WeatherInfo'}],5000);
+ const out=[];
+ for(const w of arr){
+  if(!w||w.Deleted)continue;const p=wkt(w.Geometry&&w.Geometry.WGS84);if(!p)continue;
+  const o=w.Observation||{},air=o.Air||{},sf=o.Surface||{},wind=(Array.isArray(o.Wind)?o.Wind[0]:o.Wind)||{},a30=o.Aggregated30minutes||{},wx=o.Weather||{};
+  const t=num(air.Temperature),rt=num(sf.Temperature);
+  out.push({layer:'roadwx',id:String(w.Id||p.join(',')),name:w.Name||'Väderstation',cat:'wx',color:tempColor(t),lat:p[0],lon:p[1],t,rt,hum:num(air.RelativeHumidity),dew:num(air.Dewpoint||air.DewPoint),vis:num(air.VisibleDistance),
+   ws:num(wind.Speed),wd:num(wind.Direction),gust:num(a30.Wind&&a30.Wind.SpeedMax),prec:typeof wx.Precipitation==='string'?wx.Precipitation:'',pmm:num(a30.Precipitation&&a30.Precipitation.TotalWaterEquivalent),
+   ice:sf.Ice===true||(num(sf.IceDepth)||0)>0,snow:sf.Snow===true,ts:o.Sample?Date.parse(o.Sample):0});
+ }
+ st.items=out;st.src='Trafikverket';
+}
+function wktLine(s){if(!s)return null;const body=String(s).replace(/^[^(]*/,'');return body.split(',').map(t=>{const m=t.match(/-?\d+(?:\.\d+)?/g);return m&&m.length>=2?[+m[1],+m[0]]:null;}).filter(q=>q&&isFinite(q[0])&&isFinite(q[1])&&Math.abs(q[0])<=90);}
+async function loadRoadCond(st){
+ const RC_Q='<FILTER><GT name="ConditionCode" value="1"/></FILTER>'+['Id','Deleted','ConditionCode','ConditionText','LocationText','RoadNumber','Cause','Warning','Measurement','ModifiedTime','StartTime','Geometry.WGS84'].map(x=>`<INCLUDE>${x}</INCLUDE>`).join('');
+ const arr=await tvQuery('RoadCondition',[{ver:'1.2',filter:RC_Q},{ver:'1.2'},{ver:'1.1'}],10000);
+ const out=[];
+ for(const r of arr){
+  if(!r||r.Deleted)continue;let path=wktLine(r.Geometry&&r.Geometry.WGS84);if(!path||!path.length)continue;if(path.length>80){const st2=Math.ceil(path.length/80);path=path.filter((q,i)=>i%st2===0||i===path.length-1);}
+  const code=String(r.ConditionCode||'2');if(!RCC[code])continue;const cat=code,mid=path[Math.floor(path.length/2)];let s0=90,n0=-90,w0=180,e0=-180;
+  for(const q of path){if(q[0]<s0)s0=q[0];if(q[0]>n0)n0=q[0];if(q[1]<w0)w0=q[1];if(q[1]>e0)e0=q[1];}
+  out.push({layer:'roadcond',id:String(r.Id||'rc'+out.length),name:(r.RoadNumber?r.RoadNumber+' – ':'')+(r.ConditionText||RCC[cat].name),cat,color:RCC[cat].color,lat:mid[0],lon:mid[1],path,bb:[s0,n0,w0,e0],
+   text:r.ConditionText||RCC[cat].name,loc:r.LocationText||'',cause:[].concat(r.Cause||[]).join(', '),warn:[].concat(r.Warning||[]).join(', '),meas:[].concat(r.Measurement||r.Measure||[]).join(', '),road:r.RoadNumber||'',start:r.StartTime?Date.parse(r.StartTime):0,mod:r.ModifiedTime?Date.parse(r.ModifiedTime):0});
+ }
+ st.items=out;st.src='Trafikverket';
+}
+async function loadFlow(st){
+ const arr=await tvQuery('TrafficFlow',[{ver:'1.4'},{ver:'1.5'},{ver:'1.4',ns:'road.trafficinfo'},{ver:'1.0'}],20000);
+ const m=new Map(),cut=Date.now()-60*60000;
+ for(const r of arr){
+  if(!r||r.Deleted)continue;const p=wkt(r.Geometry&&r.Geometry.WGS84);if(!p)continue;const t=r.MeasurementTime?Date.parse(r.MeasurementTime):0;if(t&&t<cut)continue;
+  const sid=String(r.SiteId!=null?r.SiteId:p.join(','));let g=m.get(sid);if(!g){g={sid,lat:p[0],lon:p[1],sp:0,spn:0,flow:0,n:0,t:0};m.set(sid,g);}
+  const sp=num(r.AverageVehicleSpeed),fl=num(r.VehicleFlowRate);if(sp!=null&&sp>0){g.sp+=sp;g.spn++;}if(fl!=null)g.flow+=fl;g.n++;if(t>g.t)g.t=t;
+ }
+ st.items=[...m.values()].filter(g=>g.spn).map(g=>{const v=g.sp/g.spn,cat=v<30?'slow':v<70?'mid':'fast';return{layer:'flow',id:g.sid,name:'Mätpunkt '+g.sid,cat,color:FLOWC[cat].color,lat:g.lat,lon:g.lon,v,flow:g.flow,n:g.n,t:g.t};});
+ st.src='Trafikverket';
+}
+
+/* ================= Flyg: rutt och foto ================= */
+const FLX=new Map();
+async function flightExtra(it){
+ const key=it.id+'|'+(it.cs||'');let d=FLX.get(key);
+ if(!d){
+  d={};
+  const [a,b]=await Promise.allSettled([getJSON(`https://api.adsbdb.com/v0/aircraft/${encodeURIComponent(it.id)}${it.cs?`?callsign=${encodeURIComponent(it.cs)}`:''}`,{},12000),getJSON(`https://api.planespotters.net/pub/photos/hex/${encodeURIComponent(it.id)}`,{},12000)]);
+  if(a.status==='fulfilled'&&a.value&&a.value.response&&typeof a.value.response==='object'){d.ac=a.value.response.aircraft||null;d.fr=a.value.response.flightroute||null;}
+  if(!d.fr&&it.cs){try{const c=await getJSON(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(it.cs)}`,{},12000);d.fr=(c&&c.response&&c.response.flightroute)||null;}catch(e){}}
+  if(b.status==='fulfilled'&&b.value&&Array.isArray(b.value.photos)&&b.value.photos[0])d.ph=b.value.photos[0];
+  FLX.set(key,d);
+ }
+ if(!sel||sel.layer!=='flights'||sel.id!==it.id)return;const el=$('#flx');if(el)el.innerHTML=flxHtml(d);
+}
+const apTxt=a=>a?`${a.iata_code||a.icao_code||''} ${a.municipality||a.name||''}`.trim():'?';
+function flxHtml(d){
+ let h='';const ph=d.ph,img=ph&&((ph.thumbnail_large&&ph.thumbnail_large.src)||(ph.thumbnail&&ph.thumbnail.src)),alt=d.ac&&(d.ac.url_photo_thumbnail||d.ac.url_photo);
+ if(img)h+=`<a class="cam" href="${esc(ph.link||'https://www.planespotters.net/')}" target="_blank" rel="noopener"><img alt="" src="${esc(img)}"><span class="cap">Foto: ${esc(ph.photographer||'okänd')} / Planespotters.net</span></a>`;
+ else if(alt)h+=`<div class="cam"><img alt="" src="${esc(alt)}"><span class="cap">Foto: airport-data.com</span></div>`;
+ if(d.fr)h+=`<div class="route"><b>${esc(apTxt(d.fr.origin))}</b> → <b>${esc(apTxt(d.fr.destination))}</b>${d.fr.airline&&d.fr.airline.name?`<br><span>${esc(d.fr.airline.name)}</span>`:''}</div>`;
+ if(d.ac&&(d.ac.manufacturer||d.ac.type||d.ac.registered_owner))h+=`<p class="note">${esc([d.ac.manufacturer,d.ac.type].filter(Boolean).join(' '))}${d.ac.registered_owner?' · ägare: '+esc(d.ac.registered_owner):''}</p>`;
+ if(!h)return'<p class="note">Ingen rutt eller bild hittades för det här planet.</p>';
+ if(d.fr)h+='<p class="note">Rutten kommer från adsbdb.com och kan vara fel för charter- och privatflyg.</p>';
+ return h;
+}
+
+/* ================= Gatubild (Mapillary) ================= */
+let streetMode=false,STREET=null;
+async function streetAt(lat,lon){
+ const d=0.0025,bbox=[lon-d*1.8,lat-d,lon+d*1.8,lat+d].map(v=>v.toFixed(5)).join(',');
+ if(sheetMode==='detail')setSel(null);
+ openSheet('street',hdr('Gatubild','Söker bilder i närheten …')+'<div class="cam vid"><div class="ph">Söker …</div></div>');
+ try{
+  const j=await getJSON(`https://graph.mapillary.com/images?access_token=${encodeURIComponent(SET.mlyKey)}&fields=id,captured_at,compass_angle,thumb_1024_url,thumb_256_url,geometry&bbox=${bbox}&limit=80`,{},15000);
+  const arr=(j.data||[]).map(x=>{const c=x.geometry&&x.geometry.coordinates;return c?Object.assign(x,{lat:c[1],lon:c[0],d:hav(lat,lon,c[1],c[0])}):null;}).filter(Boolean).sort((a,b)=>a.d-b.d);
+  if(sheetMode!=='street')return;
+  if(!arr.length){$('#sheetBody').innerHTML=hdr('Gatubild','Inga bilder här')+'<div class="empty">Det finns inga gatubilder inom ungefär 250 meter. Prova närmare en större väg eller i en tätort.</div>';STREET=null;requestDraw();return;}
+  STREET={arr,i:0};showStreet(0);
+ }catch(e){if(sheetMode==='street')$('#sheetBody').innerHTML=hdr('Gatubild','Fel')+`<div class="empty">${esc(e.status===401||e.status===403?'Mapillary godkände inte token. Kontrollera den under Inställningar.':'Kunde inte hämta gatubilder: '+errText(e))}</div>`;}
+}
+function showStreet(i){
+ if(!STREET)return;const x=STREET.arr[i];if(!x)return;STREET.i=i;
+ const others=STREET.arr.map((y,k)=>[k,y]).filter(v=>v[0]!==i).slice(0,8);
+ openSheet('street',hdr('Gatubild',`${fmt(x.d*1000)} m från punkten · ${x.captured_at?when(x.captured_at):''}`)+
+  `<a class="cam" href="https://www.mapillary.com/app/?pKey=${encodeURIComponent(x.id)}&focus=photo" target="_blank" rel="noopener"><img alt="" src="${esc(x.thumb_1024_url||x.thumb_256_url||'')}"><span class="cap">© Mapillary${x.captured_at?' · '+new Date(x.captured_at).toLocaleDateString('sv-SE'):''}</span></a>`+
+  `<div class="acts"><a class="btn pri" href="https://www.mapillary.com/app/?pKey=${encodeURIComponent(x.id)}&focus=photo" target="_blank" rel="noopener">${svg('ext')}Öppna och gå runt i Mapillary</a></div>`+
+  (others.length?`<div class="sec">Fler bilder i närheten</div><div class="near">${others.map(([k,y])=>`<button data-act="mly" data-i="${k}"><img loading="lazy" alt="" src="${esc(y.thumb_256_url||'')}"><span>${fmt(y.d*1000)} m</span><small>${y.captured_at?new Date(y.captured_at).toLocaleDateString('sv-SE'):''}</small></button>`).join('')}</div>`:''));
+ requestDraw();
 }
 
 /* ================= Polisen ================= */
@@ -633,19 +940,23 @@ async function loadInfra(st){
 
 /* ================= Karta ================= */
 const BASE={
- dark:{name:'Mörk',url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',opt:{subdomains:'abcd',maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}},
- light:{name:'Ljus',url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',opt:{subdomains:'abcd',maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}},
- sat:{name:'Satellit',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',labels:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',opt:{subdomains:'abcd',maxZoom:19,attribution:'Bilder &copy; Esri, Maxar, Earthstar Geographics &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO'}},
+ dark:{name:'Mörk',carto:true,url:'https://basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=__CK__',opt:{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}},
+ light:{name:'Ljus',carto:true,url:'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=__CK__',opt:{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}},
+ sat:{name:'Satellit',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',labels:'https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png?key=__CK__',opt:{maxZoom:19,attribution:'Bilder &copy; Esri, Maxar, Earthstar Geographics &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO'}},
  osm:{name:'OpenStreetMap',url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opt:{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare'}}
 };
 const map=L.map('map',{zoomControl:false,attributionControl:true,minZoom:3,maxZoom:18,worldCopyJump:true});
 map.attributionControl.setPrefix(false);
+map.createPane('ovl');(function(){const op=map.getPane('ovl');if(op){op.style.zIndex=350;op.style.pointerEvents='none';}})();
 let baseLayers=[];
 function setBase(k){
- baseLayers.forEach(l=>map.removeLayer(l));baseLayers=[];const b=BASE[k]||BASE.dark;
- baseLayers.push(L.tileLayer(b.url,b.opt).addTo(map));
- if(b.labels)baseLayers.push(L.tileLayer(b.labels,Object.assign({},b.opt,{attribution:''})).addTo(map));
+ baseLayers.forEach(l=>map.removeLayer(l));baseLayers=[];let b=BASE[k]||BASE.dark;
+ const ck=encodeURIComponent(SET.cartoKey||'');const u=x=>x.replace('__CK__',ck);
+ if(b.carto&&!SET.cartoKey)b=BASE.osm;
+ baseLayers.push(L.tileLayer(u(b.url),b.opt).addTo(map));
+ if(b.labels&&SET.cartoKey)baseLayers.push(L.tileLayer(u(b.labels),Object.assign({},b.opt,{attribution:''})).addTo(map));
  SET.base=BASE[k]?k:'dark';saveSet();
+ if(typeof TT!=='undefined'&&TT.layer)trafficSet();
 }
 setBase(SET.base);
 const view=LS.get('view',null);
@@ -685,6 +996,10 @@ function drawItem(it,x,y,z,k){
   case'flights':glyphPlane(x,y,it.rot,it.color,8*k);break;
   case'ships':glyphShip(x,y,it.rot,it.color,8.5*k,it.still);break;
   case'cameras':if(z<7){dot(x,y,2.6*k,it.color,.8);}else{const s=9*k;rrect(x-s/2,y-s/2,s,s,2.5);ctx.fillStyle=it.color;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.stroke();dot(x,y,1.7*k,'#0b1016');}break;
+  case'live':{const r=7*k;dot(x,y,r,it.color,1);ctx.beginPath();ctx.moveTo(x-r*.3,y-r*.45);ctx.lineTo(x+r*.52,y);ctx.lineTo(x-r*.3,y+r*.45);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();break;}
+  case'webcams':if(z<7&&!it.live){dot(x,y,2.4*k,it.color,.8);}else{const r=(it.live?5.4:4.2)*k;dot(x,y,r,it.color,1);dot(x,y,r*.42,'#0b1016');}break;
+  case'roadwx':{if(z<7){dot(x,y,3*k,it.color,.8);break;}const tx=it.t==null?'–':Math.round(it.t)+'°';ctx.font='700 10.5px -apple-system,system-ui,sans-serif';const w=ctx.measureText(tx).width+9,h=15;rrect(x-w/2,y-h/2,w,h,7);ctx.fillStyle=it.color;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.stroke();ctx.fillStyle='#0b1016';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(tx,x,y+.5);if(it.ice||(it.rt!=null&&it.rt<=0)){dot(x+w/2-1,y-h/2+1,3.4,'#fff',.8);}break;}
+  case'flow':{if(z<9){dot(x,y,2.6*k,it.color,.8);break;}dot(x,y,5*k,it.color,1);if(z>=11){const tx=Math.round(it.v)+' km/h';ctx.font='700 10px -apple-system,system-ui,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';ctx.lineWidth=3;ctx.strokeStyle='rgba(5,8,12,.85)';ctx.strokeText(tx,x+8,y);ctx.fillStyle='#e8eef4';ctx.fillText(tx,x+8,y);}break;}
   case'trains':{const w=12*k,h=6.5*k;ctx.save();ctx.translate(x,y);ctx.rotate(((it.rot||0)-90)*DEG);rrect(-w/2,-h/2,w,h,2.5);ctx.fillStyle=it.color;ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle='rgba(255,255,255,.85)';ctx.stroke();ctx.restore();break;}
   case'events':{const s=7*k;ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s*.9,y+s*.62);ctx.lineTo(x-s*.9,y+s*.62);ctx.closePath();ctx.fillStyle=it.color;ctx.fill();ctx.lineWidth=1;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.stroke();break;}
   case'infra':{const c=it.cat,r=(c==='airport'||c==='nuclear'?4.6:c==='substation'||c==='solar'||c==='plant'?2.8:3.6)*k;
@@ -706,6 +1021,8 @@ function labelOf(it,z){
   case'trains':return z>=10?it.id:null;
   case'infra':return z>=(it.cat==='airport'||it.cat==='nuclear'?7:10)&&!it.unnamed?it.name:null;
   case'cameras':return z>=12?it.name:null;
+  case'live':return z>=7?it.name:null;
+  case'webcams':return z>=12?it.name:null;
  }
  return null;
 }
@@ -731,7 +1048,9 @@ function draw(){
   const st=ST[id];if(!st.on||!st.items.length)continue;
   const groups=id==='police'?new Map():null;
   for(const it of st.items){
-   if(!passes(id,it))continue;const p=posOf(it,now);
+   if(!passes(id,it))continue;
+   if(id==='roadcond'){const bb=it.bb;if(bb[1]<S||bb[0]>N||bb[3]<Wd||bb[2]>E)continue;const pts=it.path.map(q=>proj(q[0],q[1]));const lw=z<8?2.5:z<11?4:6;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();pts.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.lineWidth=lw+2;ctx.strokeStyle='rgba(0,0,0,.45)';ctx.stroke();ctx.lineWidth=lw;ctx.strokeStyle=it.color;ctx.stroke();const mq=pts[Math.floor(pts.length/2)];it._x=mq.x;it._y=mq.y;it._f=frame;it._pts=pts;HITS.push(it);continue;}
+   const p=posOf(it,now);
    if(p.lat<S||p.lat>N||p.lon<Wd||p.lon>E)continue;
    const q=proj(p.lat,p.lon);if(q.x<-30||q.y<-30||q.x>W+30||q.y>H+30)continue;
    it._x=q.x;it._y=q.y;it._f=frame;HITS.push(it);
@@ -750,6 +1069,7 @@ function draw(){
  if(sel&&sel.item&&sel.item._f!==frame&&ST[sel.layer].on){const it=sel.item,p=posOf(it,now),q=proj(p.lat,p.lon);if(q.x>-30&&q.y>-30&&q.x<W+30&&q.y<H+30){it._x=q.x;it._y=q.y;it._f=frame;HITS.push(it);drawItem(it,q.x,q.y,z,k);}}
  if(sel&&sel.item&&sel.item._f===frame){const x=sel.item._x,y=sel.item._y;ctx.beginPath();ctx.arc(x,y,13,0,TAU);ctx.lineWidth=2.5;ctx.strokeStyle='#fff';ctx.stroke();ctx.beginPath();ctx.arc(x,y,16.5,0,TAU);ctx.lineWidth=1.5;ctx.strokeStyle=alpha(sel.item.color||'#5cc8ff',.9);ctx.stroke();}
  // min position
+ if(STREET&&sheetMode==='street'){const x=STREET.arr[STREET.i];if(x){const q=proj(x.lat,x.lon);if(x.compass_angle!=null){ctx.save();ctx.translate(q.x,q.y);ctx.rotate(x.compass_angle*DEG);ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,34,-Math.PI/2-.5,-Math.PI/2+.5);ctx.closePath();ctx.fillStyle='rgba(92,200,255,.28)';ctx.fill();ctx.restore();}dot(q.x,q.y,7,'#fff');dot(q.x,q.y,5,'#05cb63');}}
  if(ME){const q=proj(ME.lat,ME.lon);const mpp=40075016.686*Math.cos(ME.lat*DEG)/Math.pow(2,z+8);const ra=ME.acc/mpp;if(ra>8&&ra<2000){ctx.beginPath();ctx.arc(q.x,q.y,ra,0,TAU);ctx.fillStyle='rgba(92,200,255,.12)';ctx.fill();}dot(q.x,q.y,7,'#fff');dot(q.x,q.y,5,'#2f9bff');}
 }
 
@@ -772,7 +1092,7 @@ const posTxt=it=>`${(+it.lat).toFixed(4)}, ${(+it.lon).toFixed(4)}`;
 const DETAIL={
  flights(it){const a=it.alt,m=a!=null?a*.3048:null,kmh=it.gs!=null?it.gs*1.852:null,em=it.emerg||(['7500','7600','7700'].includes(it.sq)?it.sq:'');
   return{title:it.cs||it.reg||it.id.toUpperCase(),sub:[it.type,it.reg,it.op].filter(Boolean).join(' · ')||'Flygplan',color:it.color,
-   top:em?`<p><span class="pill red">NÖDLÄGE · ${esc(em)}</span></p>`:'',
+   top:(em?`<p><span class="pill red">NÖDLÄGE · ${esc(em)}</span></p>`:'')+'<div id="flx"><p class="note">Hämtar rutt och foto …</p></div>',
    rows:[['Höjd',it.ground?'På marken':a!=null?`${fmt(a)} ft (${fmt(m)} m)`:'–'],['Fart',it.gs!=null?`${fmt(it.gs)} kn (${fmt(kmh)} km/h)`:'–'],['Kurs',compass(it.trk)],['Stig/sjunk',it.vr!=null?`${it.vr>0?'+':''}${fmt(it.vr)} ft/min`:'–'],['Transponder',it.sq||'–'],['Typ',it.type?(it.type+(it.desc?` – ${it.desc}`:'')):'–'],['Registrering',it.reg||'–'],['ICAO-adress',it.id.toUpperCase()],it.country?['Land',it.country]:null,['Position',posTxt(it)],['Senast sedd',ago(it.t)],['Källa',ST.flights.src||'–']],
    links:[['ADSB.lol',`https://adsb.lol/?icao=${encodeURIComponent(it.id)}`]].concat(it.cs?[['FlightAware',`https://www.flightaware.com/live/flight/${encodeURIComponent(it.cs)}`]]:[])};},
  ships(it){const m=it.meta||{},len=m.referencePointA!=null&&m.referencePointB!=null?m.referencePointA+m.referencePointB:null,bre=m.referencePointC!=null&&m.referencePointD!=null?m.referencePointC+m.referencePointD:null;
@@ -784,8 +1104,24 @@ const DETAIL={
    extra:'<p class="note">Heldragen linje visar banan bakåt, streckad visar banan framåt. Den ljusa cirkeln är området där satelliten är över horisonten.</p>',
    links:[['N2YO',`https://www.n2yo.com/satellite/?s=${it.id}`],['Heavens-Above',`https://www.heavens-above.com/orbit.aspx?satid=${it.id}`]]};},
  cameras(it){return{title:it.name,sub:it.cat,color:it.color,top:camHtml(it),
-   rows:[['Bild tagen',it.pt?`${when(it.pt)} (${ago(it.pt)})`:'–'],['Typ',it.cat],['Riktning',it.dir!=null?compass(it.dir):'–'],['Beskrivning',it.desc||'–'],['Plats',it.loc||'–'],['Status',it.status||'–'],['Kamera-id',it.id],['Position',posTxt(it)]],
+   rows:[['Bild tagen',it.pt?`${when(it.pt)} (${ago(it.pt)})`:'–'],['Uppdateras','Stillbild med några minuters mellanrum – Trafikverket sänder ingen video'],['Typ',it.cat],['Riktning',it.dir!=null?compass(it.dir):'–'],['Beskrivning',it.desc||'–'],['Plats',it.loc||'–'],['Status',it.status||'–'],['Kamera-id',it.id],['Position',posTxt(it)]],
    extra:nearHtml(it),links:[['Trafikverket',`https://www.trafikverket.se/trafikinformation/vag/`]]};},
+ live(it){return{title:it.name,sub:'Livevideo'+(it.own?' · egen kamera':''),color:it.color,
+   top:`<div class="cam vid"><iframe src="${ytEmbed(it.yt)}" title="${esc(it.name)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`,
+   rows:[['Typ',isCS(it.yt)?'Livevideo via CamStreamer':'Livevideo via YouTube'],['Kanal',it.src||'YouTube'],['Position',posTxt(it)+(it.approx?' (ungefärlig)':'')]],
+   extra:`<p class="note">Startar inte videon kan sändningen ha fått en ny adress. Prova hela spellistan, eller lägg till den nya länken som egen livekamera.</p><div class="acts"><button class="btn" data-act="playlist">${svg('play')}Alla livekameror (${LIVE_LIST.length})</button></div>`+(it.own?`<div class="acts"><button class="btn" data-act="dellive">${svg('trash')}Ta bort kameran</button></div>`:''),
+   links:[liveLink(it.yt)]};},
+ webcams(it){const L=(it.w&&it.w.location)||{};return{title:it.name,sub:[it.city,it.live?'Livevideo':'Webbkamera'].filter(Boolean).join(' · '),color:it.color,
+   top:`<div class="cam vid" id="wcBox"><div class="ph">Hämtar kameran …</div></div><div class="acts" id="wcBtns"></div>`,
+   rows:[['Plats',[it.city,L.region].filter(Boolean).join(', ')||'–'],['Senast uppdaterad',it.upd?`${when(it.upd)} (${ago(it.upd)})`:'–'],['Typ',it.live?'Livevideo och timelapse':'Stillbild och timelapse'],['Windy-id',it.id],['Position',posTxt(it)],['Källa','Windy.com']],
+   links:[['Visa på Windy',it.wurl||`https://www.windy.com/webcams/${encodeURIComponent(it.id)}`]].concat(it.prov?[['Kamerans webbplats',it.prov]]:[])};},
+ roadwx(it){const pr=it.prec?(PREC[it.prec]||it.prec):'';return{title:it.name,sub:'Trafikverkets väderstation',color:it.color,
+   top:(it.ice||(it.rt!=null&&it.rt<=0))?'<p><span class="pill red">RISK FÖR HALKA</span></p>':'',
+   rows:[['Lufttemperatur',it.t!=null?`${fmt(it.t,1)} °C`:'–'],['Vägtemperatur',it.rt!=null?`${fmt(it.rt,1)} °C`:'–'],['Luftfuktighet',it.hum!=null?`${fmt(it.hum)} %`:'–'],it.dew!=null?['Daggpunkt',`${fmt(it.dew,1)} °C`]:null,['Vind',it.ws!=null?`${fmt(it.ws,1)} m/s${it.wd!=null?' från '+compass(it.wd):''}`:'–'],['Byvind (30 min)',it.gust!=null?`${fmt(it.gust,1)} m/s`:'–'],['Nederbörd',pr||'–'],it.pmm!=null?['Mängd (30 min)',`${fmt(it.pmm,1)} mm`]:null,it.vis!=null?['Sikt',`${fmt(it.vis)} m`]:null,['Is/snö på vägen',it.ice?'Is':it.snow?'Snö':'–'],['Uppmätt',it.ts?`${when(it.ts)} (${ago(it.ts)})`:'–'],['Position',posTxt(it)]]};},
+ roadcond(it){return{title:it.name,sub:'Väglag',color:it.color,
+   rows:[['Väglag',it.text],['Väg',it.road||'–'],['Sträcka',it.loc||'–'],['Orsak',it.cause||'–'],['Varning',it.warn||'–'],['Åtgärd',it.meas||'–'],['Uppdaterad',it.mod?`${when(it.mod)} (${ago(it.mod)})`:'–'],['Källa','Trafikverket']]};},
+ flow(it){return{title:it.name,sub:'Trafikflöde',color:it.color,
+   rows:[['Medelhastighet',`${fmt(it.v)} km/h`],['Fordonsflöde',it.flow?`${fmt(it.flow)} fordon/timme`:'–'],['Antal mätvärden',fmt(it.n)],['Uppmätt',it.t?`${when(it.t)} (${ago(it.t)})`:'–'],['Position',posTxt(it)],['Källa','Trafikverket']]};},
  trains(it){return{title:it.name,sub:'Tågposition',color:it.color,
    rows:[['Hastighet',it.spd!=null?`${fmt(it.spd)} km/h`:'–'],['Riktning',compass(it.rot)],['Uppdaterad',it.t?`${when(it.t)} (${ago(it.t)})`:'–'],['Operativt tågnr',it.opnr||'–'],['Avgångsdag',it.dep?String(it.dep).slice(0,10):'–'],['Position',posTxt(it)],['Källa','Trafikverket']],
    links:[['Trafikverket tåg',`https://www.trafikverket.se/trafikinformation/tag/`]]};},
@@ -810,6 +1146,8 @@ function showDetail(it){
  <div class="acts"><button class="btn" data-act="center">${svg('target')}Centrera</button>${MOVING.has(it.layer)?`<button class="btn ${follow?'on':''}" data-act="follow">${svg('follow')}Följ</button>`:''}<button class="btn" data-act="share">${svg('link')}Kopiera länk</button>${(d.links||[]).map(l=>`<a class="btn" href="${esc(l[1])}" target="_blank" rel="noopener">${svg('ext')}${esc(l[0])}</a>`).join('')}</div>`;
  openSheet('detail',html);
  if(it.layer==='cameras')startCam(it);
+ if(it.layer==='webcams')wDetail(it);
+ if(it.layer==='flights')flightExtra(it);
 }
 function refreshDetail(){if(sheetMode!=='detail'||!sel||!sel.item)return;const el=$('#drows');if(el)el.innerHTML=rowsHtml(DETAIL[sel.layer](sel.item).rows);}
 function showMulti(items){
@@ -840,8 +1178,8 @@ function openSheet(mode,html){
  $('#sheet').classList.add('on');document.body.classList.add('sheet-open');fabState();
 }
 function closeSheet(){
- const was=sheetMode;sheetMode=null;stopCam();$('#sheet').classList.remove('on','tall');document.body.classList.remove('sheet-open');
- if(was==='detail'&&sel)setSel(null);fabState();
+ const was=sheetMode;sheetMode=null;stopCam();$('#sheetBody').querySelectorAll('iframe').forEach(f=>f.remove());$('#sheet').classList.remove('on','tall');document.body.classList.remove('sheet-open');
+ if(was==='detail'&&sel)setSel(null);if(was==='street'){STREET=null;requestDraw();}fabState();
 }
 function fabState(){$('#bLayers').classList.toggle('on',sheetMode==='layers');$('#bFavs').classList.toggle('on',sheetMode==='favs');}
 
@@ -849,14 +1187,16 @@ function fabState(){$('#bLayers').classList.toggle('on',sheetMode==='layers');$(
 function statusTxt(id){
  const st=ST[id],Ld=LAYERS[id];
  if(!st.on)return esc(Ld.desc);
- if(st.status==='key')return`${esc(st.msg||'Kräver Trafikverket-nyckel')} – <button data-act="settings">lägg till nyckel</button>`;
+ if(st.status==='key')return`${esc(st.msg||'Kräver Trafikverket-nyckel')} – <button data-act="settings">öppna inställningar</button>`;
  if(st.busy&&!st.items.length)return'Hämtar …';
  if(st.status==='err')return esc(st.msg)+(st.items.length?' · visar senaste data':'');
  if(st.t)return`Uppdaterad ${hm(st.t)}${st.src?' · '+esc(st.src):''}${st.note?' · '+esc(st.note):''}`;
  return esc(Ld.desc);
 }
 function chipsHtml(id){
- const cats=catsOf(id);let h=cats.map(c=>`<button class="chip ${ST[id].off.has(c.k)?'':'on'}" data-act="cat" data-l="${id}" data-k="${esc(c.k)}"><i style="background:${esc(c.color)}"></i>${esc(c.name)}${c.n?` <em>${fmt(c.n)}</em>`:''}</button>`).join('');
+ const cats=LAYERS[id].noCats?[]:catsOf(id);let h=cats.map(c=>`<button class="chip ${ST[id].off.has(c.k)?'':'on'}" data-act="cat" data-l="${id}" data-k="${esc(c.k)}"><i style="background:${esc(c.color)}"></i>${esc(c.name)}${c.n?` <em>${fmt(c.n)}</em>`:''}</button>`).join('');
+ if(id==='live')h+=`<button class="chip on" data-act="playlist"><i style="background:#ff4d6d"></i>▶ Alla livekameror</button>`;
+ if(id==='live')h+=`<button class="chip on" data-act="addlive"><i style="background:var(--ac)"></i>+ Lägg till egen</button>`;
  if(id==='ships')h+=`<button class="chip ${ST.ships.off.has('_still')?'':'on'}" data-act="cat" data-l="ships" data-k="_still"><i style="background:#8b98a7"></i>Stillaliggande</button>`;
  return h?`<div class="chips">${h}</div>`:'';
 }
@@ -871,14 +1211,15 @@ function uiLayers(){
  for(const id of PANEL_ORDER){const st=ST[id];const c=$('#lc-'+id),s=$('#ls-'+id),ch=$('#lchips-'+id);
   if(c)c.textContent=st.on&&st.items.length?fmt(visibleCount(id)):'';
   if(s){s.innerHTML=statusTxt(id);s.className=st.on&&st.status==='err'?'err':st.on&&st.status==='key'?'key':'';}
-  if(ch&&!LAYERS[id].cats&&st.on){const want=catsOf(id).length;if(ch.querySelectorAll('.chip').length!==want)ch.innerHTML=chipsHtml(id);}
+  if(ch&&!LAYERS[id].cats&&!LAYERS[id].noCats&&st.on){const want=catsOf(id).length;if(ch.querySelectorAll('.chip').length!==want)ch.innerHTML=chipsHtml(id);}
  }
 }
 function uiCounts(){
  $('#counts').innerHTML=PANEL_ORDER.filter(id=>ST[id].on).map(id=>{const st=ST[id],Ld=LAYERS[id];let inner,cls='';
-  if(st.status==='key'){inner='nyckel saknas';cls='key';}
+  if(st.status==='key'){inner=id==='flights'?'proxy saknas':'nyckel saknas';cls='key';}
   else if(st.busy&&!st.items.length)inner='<span class="spin"></span>';
   else if(st.status==='err'&&!st.items.length){inner='fel';cls='err';}
+  else if(Ld.overlay)inner=st.status==='ok'?(id==='radar'&&RADAR.frames.length?$('#rcTime').textContent:'på'):'…';
   else inner=fmt(visibleCount(id));
   return`<button class="cnt glass ${cls}" data-act="layers" title="${Ld.name}" style="color:${cls?'':Ld.color}">${svg(Ld.icon)}<span style="color:var(--tx)">${inner}</span></button>`;}).join('');
 }
@@ -905,10 +1246,34 @@ function goFav(k){
 function settingsHtml(){
  return hdr('Inställningar','Sparas bara i den här webbläsaren')+
  `<div class="sec">Trafikverket (kameror, tåg, trafikhändelser)</div>
- <p class="note">Kräver en gratis API-nyckel. Logga in på <a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverkets datautbytesportal</a> (data.trafikverket.se), skapa en nyckel under ”Mina nycklar” och klistra in den här.</p>
+ <p class="note">Nyckel finns redan inbyggd. Vill du byta: logga in på <a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverkets datautbytesportal</a> (data.trafikverket.se), skapa en nyckel under ”Mina nycklar” och klistra in den här.</p>
  <input class="inp" id="tvKey" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Klistra in API-nyckel" value="${esc(SET.tvKey)}">
  <div class="acts"><button class="btn pri" data-act="savekey">Spara och testa</button>${SET.tvKey?'<button class="btn" data-act="delkey">Ta bort nyckel</button>':''}</div>
  <p class="note" id="keyRes"></p>
+ <div class="sec">Flygproxy (krävs för flyg)</div>
+ <p class="note">Flygkällorna tillåter inte att webbsidor hämtar data direkt. En egen gratis proxy på Cloudflare löser det. Följ instruktionen du fick av Claude och klistra in adressen här (t.ex. https://flyg.dittnamn.workers.dev).</p>
+ <input class="inp" id="proxyUrl" type="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://….workers.dev" value="${esc(SET.proxy)}">
+ <div class="acts"><button class="btn pri" data-act="saveproxy">Spara och testa</button></div>
+ <p class="note" id="proxyRes"></p>
+ <div class="sec">Windy (webbkameror i hela Sverige)</div>
+ <p class="note">Nyckel finns inbyggd. Vill du byta: skapa en på <a href="https://api.windy.com/keys" target="_blank" rel="noopener">api.windy.com/keys</a>, skapa en nyckel för <b>Webcams API</b> och klistra in den här.</p>
+ <input class="inp" id="wKey" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Klistra in Windy-nyckel" value="${esc(SET.wKey)}">
+ <div class="acts"><button class="btn pri" data-act="savewkey">Spara och testa</button>${SET.wKey?'<button class="btn" data-act="delwkey">Ta bort nyckel</button>':''}</div>
+ <p class="note" id="wkeyRes"></p>
+ <div class="sec">CARTO (mörk och ljus bakgrundskarta)</div>
+ <p class="note">Nyckel finns inbyggd. Byt här om du skapar en ny på <a href="https://carto.com/basemaps/apikey" target="_blank" rel="noopener">carto.com/basemaps/apikey</a>. Utan nyckel används OpenStreetMap.</p>
+ <input class="inp" id="cKey" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="CARTO-nyckel (cb1_…)" value="${esc(SET.cartoKey)}">
+ <div class="acts"><button class="btn pri" data-act="saveckey">Spara</button></div>
+ <div class="sec">TomTom (trafikläge i realtid)</div>
+ <p class="note">Gratis nyckel, inget kort krävs: skapa konto på <a href="https://developer.tomtom.com/" target="_blank" rel="noopener">developer.tomtom.com</a> och kopiera din API-nyckel.</p>
+ <input class="inp" id="ttKey" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="TomTom-nyckel" value="${esc(SET.ttKey)}">
+ <div class="acts"><button class="btn pri" data-act="savettkey">Spara</button></div>
+ <div class="sec">Mapillary (gatubilder)</div>
+ <p class="note">Gratis token: logga in på <a href="https://www.mapillary.com/dashboard/developers" target="_blank" rel="noopener">mapillary.com/dashboard/developers</a>, registrera en app och kopiera <b>Client Token</b> (börjar med MLY|).</p>
+ <input class="inp" id="mlyKey" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="MLY|…" value="${esc(SET.mlyKey)}">
+ <div class="acts"><button class="btn pri" data-act="savemly">Spara</button></div>
+ <div class="sec">Egna livekameror</div>
+ <div class="acts"><button class="btn" data-act="addlive">${svg('play')}Lägg till livekamera från YouTube</button></div>
  <div class="sec">Bakgrundskarta</div>
  <div class="seg">${Object.keys(BASE).map(k=>`<button data-act="base" data-k="${k}" class="${SET.base===k?'on':''}">${BASE[k].name}</button>`).join('')}</div>
  <div class="sec">Visning</div>${optRows()}
@@ -924,7 +1289,14 @@ function aboutHtml(){
  <li><b>Flyg:</b> adsb.lol (ODbL), airplanes.live och OpenSky Network. Används i den ordningen, nästa tar över om en källa inte svarar.</li>
  <li><b>Fartyg:</b> Fintraffic / Digitraffic, CC BY 4.0. Täcker främst Östersjön och Bottniska viken. Västkusten är glest täckt.</li>
  <li><b>Satelliter:</b> banelement från CelesTrak, positioner räknas ut i appen (förenklad modell, normalt inom några tiotal km). Reserv för ISS: wheretheiss.at.</li>
- <li><b>Kameror, tåg, trafikhändelser:</b> Trafikverkets öppna API (CC0)</li>
+ <li><b>Kameror, tåg, trafikhändelser:</b> Trafikverkets öppna API (CC0). Trafikverkets kameror är stillbilder.</li>
+ <li><b>Livekameror:</b> YouTube-livesändningar (MEDview m.fl.), CamStreamer och egna tillagda</li>
+ <li><b>Webbkameror:</b> Windy.com Webcams API</li>
+ <li><b>Väderradar:</b> RainViewer (rainviewer.com)</li>
+ <li><b>Trafikläge:</b> TomTom Traffic</li>
+ <li><b>Vägväder, väglag, trafikflöde:</b> Trafikverket (CC0)</li>
+ <li><b>Flygrutter och flygplansfakta:</b> adsbdb.com · <b>Flygfoton:</b> Planespotters.net</li>
+ <li><b>Gatubilder:</b> © Mapillary</li>
  <li><b>Polisens händelser:</b> Polismyndighetens öppna API. Positionerna är ungefärliga.</li>
  <li><b>Infrastruktur:</b> OpenStreetMap via Overpass API (ODbL)</li>
  <li><b>Platssökning:</b> Nominatim / OpenStreetMap</li></ul>
@@ -941,9 +1313,26 @@ async function saveKey(){
  catch(e){res.className='note err';res.textContent=e.needKey?'Trafikverket godkände inte nyckeln. Kontrollera att hela nyckeln kom med.':'Kunde inte nå Trafikverket: '+errText(e);}
 }
 
+function addLiveHtml(){const c=map.getCenter();return hdr('Lägg till livekamera','Från en YouTube-livesändning')+`<p class="note">Klistra in länken till livesändningen. Kameran placeras i kartans mittpunkt (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}), så flytta kartan dit kameran står innan du öppnar det här.</p><input class="inp" id="lvName" placeholder="Namn, t.ex. Varbergs torg" style="font-family:inherit;margin-bottom:8px"><input class="inp" id="lvUrl" placeholder="https://www.youtube.com/watch?v=…" autocapitalize="off" autocorrect="off" spellcheck="false"><div class="acts"><button class="btn pri" data-act="savelive">Spara</button></div><p class="note" id="lvRes"></p>`;}
+function saveLive(){
+ const id=ytId($('#lvUrl').value),nm=($('#lvName').value||'').trim()||'Livekamera',res=$('#lvRes');
+ if(!id){res.className='note err';res.textContent='Hittade ingen YouTube-video i länken.';return;}
+ const c=map.getCenter(),mine=LS.get('mylive',[]),rec={id:'my-'+Date.now().toString(36),name:nm,lat:+c.lat.toFixed(5),lon:+c.lng.toFixed(5),yt:id};
+ mine.push(rec);LS.set('mylive',mine);
+ if(!ST.live.on)toggleLayer('live',true);else refresh('live');
+ pendingAsset={layer:'live',id:rec.id};toast('Livekameran är sparad');
+}
+async function saveWKey(){
+ const v=($('#wKey').value||'').trim(),res=$('#wkeyRes');SET.wKey=v;saveSet();LS.del('windy');LS.set('wkeyCleared',!v);
+ if(!v){res.className='note';res.textContent='Nyckeln är borttagen.';ST.webcams.items=[];ST.webcams.byId=new Map();requestDraw();uiAll();return;}
+ res.className='note';res.textContent='Testar nyckeln …';
+ try{await getJSON(`${WINDY}?countries=SE&limit=1`,wHead(),15000);res.className='note ok';res.textContent='Nyckeln fungerar. Webbkamerorna laddas nu.';if(ST.webcams.on)refresh('webcams',true);else toggleLayer('webcams',true);}
+ catch(e){const x=wErr(e);res.className='note err';res.textContent=x.needKey?'Windy godkände inte nyckeln. Kontrollera att den är skapad för Webcams API.':'Kunde inte nå Windy: '+errText(e);}
+}
+
 /* ================= Sök ================= */
 let sT=0,pT=0,lastQ='';
-function searchStr(it){return[it.name,it.id,it.reg,it.type,it.cat,it.meta&&it.meta.callSign,it.meta&&it.meta.destination,it.loc,it.place,it.road].filter(Boolean).join(' ').toLowerCase();}
+function searchStr(it){return[it.name,it.id,it.city,it.reg,it.type,it.cat,it.meta&&it.meta.callSign,it.meta&&it.meta.destination,it.loc,it.place,it.road].filter(Boolean).join(' ').toLowerCase();}
 function doSearch(raw){
  const q=raw.trim().toLowerCase();lastQ=q;const box=$('#sres');
  if(q.length<2){box.classList.remove('on');box.innerHTML='';return;}
@@ -974,6 +1363,10 @@ $('#bLayers').onclick=()=>toggleSheet('layers',layersHtml);
 $('#bFavs').onclick=()=>toggleSheet('favs',favsHtml);
 $('#bSet').onclick=()=>toggleSheet('settings',settingsHtml);
 $('#bAbout').onclick=()=>toggleSheet('about',aboutHtml);
+$('#bStreet').innerHTML=svg('street');
+$('#bStreet').onclick=()=>{if(!SET.mlyKey){toast('Gatubild kräver en gratis Mapillary-token',{label:'Inställningar',fn:()=>openSheet('settings',settingsHtml())});return;}streetMode=!streetMode;$('#bStreet').classList.toggle('on',streetMode);toast(streetMode?'Gatubild: tryck på en gata på kartan':'Gatubild avstängd');};
+$('#rcPlay').onclick=()=>{RADAR.playing=!RADAR.playing;radarShow(RADAR.idx);radarLoop();};
+$('#rcRange').oninput=e=>{RADAR.playing=false;radarShow(+e.target.value);radarLoop();};
 $('#bHome').onclick=()=>map.flyToBounds?map.flyToBounds(SWE_BOUNDS,{padding:[10,10],duration:.8}):map.fitBounds(SWE_BOUNDS);
 $('#bLoc').onclick=()=>{
  if(!navigator.geolocation){toast('Platstjänster stöds inte här');return;}
@@ -1011,9 +1404,24 @@ $('#sheetBody').addEventListener('click',e=>{
  else if(a==='gofav')goFav(b.dataset.k);
  else if(a==='unfav'){delete FAV[b.dataset.k];LS.set('favs',FAV);FAVSET=new Set(Object.keys(FAV));openSheet('favs',favsHtml());requestDraw();}
  else if(a==='savekey')saveKey();
+ else if(a==='savewkey')saveWKey();
+ else if(a==='saveproxy'){SET.proxy=($('#proxyUrl').value||'').trim();saveSet();const res=$('#proxyRes');ST.flights.prov=0;
+  if(!SET.proxy){res.className='note';res.textContent='Proxyn är borttagen.';}
+  else{res.className='note';res.textContent='Testar …';getJSON(viaProxy('https://api.adsb.lol/v2/point/59.65/17.92/30'),{},15000).then(j=>{res.className='note ok';res.textContent=`Proxyn fungerar (${(j.ac||[]).length} flygplan runt Arlanda). Flyg laddas nu.`;if(ST.flights.on)refresh('flights',true);else toggleLayer('flights',true);}).catch(e=>{res.className='note err';res.textContent='Proxyn svarade inte: '+errText(e);});}}
+ else if(a==='savettkey'){SET.ttKey=($('#ttKey').value||'').trim();saveSet();TT.mode=0;if(!SET.ttKey){trafficClear();toast('TomTom-nyckeln är borttagen');}else{toast('TomTom-nyckeln är sparad');if(ST.traffic.on){trafficClear();refresh('traffic',true);}else toggleLayer('traffic',true);}uiAll();}
+ else if(a==='savemly'){SET.mlyKey=($('#mlyKey').value||'').trim();saveSet();toast(SET.mlyKey?'Mapillary-token sparad – tryck på gubben och sedan på kartan':'Mapillary-token borttagen');}
+ else if(a==='mly')showStreet(+b.dataset.i);
+ else if(a==='saveckey'){SET.cartoKey=($('#cKey').value||'').trim();saveSet();LS.set('cartoCleared',!SET.cartoKey);setBase(SET.base);toast(SET.cartoKey?'CARTO-nyckeln är sparad':'Ingen CARTO-nyckel – OpenStreetMap används');}
+ else if(a==='delwkey'){$('#wKey').value='';saveWKey().then(()=>openSheet('settings',settingsHtml()));}
+ else if(a==='addlive'){if(sheetMode==='detail')setSel(null);openSheet('addlive',addLiveHtml());}
+ else if(a==='savelive')saveLive();
+ else if(a==='playlist'){if(sheetMode==='detail')setSel(null);openSheet('playlist',playlistHtml());}
+ else if(a==='plv'){const r=LIVE_LIST[+b.dataset.i];if(!r)return;const it=r[3]!=null&&ST.live.byId.get(liveId(r[0]));if(it)select(it,true);else openSheet('video',videoHtml(r));}
+ else if(a==='dellive'&&sel&&sel.item&&sel.item.own){LS.set('mylive',LS.get('mylive',[]).filter(c=>String(c.id)!==sel.item.id));closeSheet();refresh('live');toast('Livekameran är borttagen');}
+ else if(a==='wplay'&&sel&&sel.item)wPlay(sel.item,b.dataset.k);
  else if(a==='delkey'){SET.tvKey='';saveSet();LS.set('keyCleared',true);openSheet('settings',settingsHtml());for(const id of['cameras','trains','events']){ST[id].items=[];ST[id].byId=new Map();if(ST[id].on)refresh(id);}requestDraw();}
  else if(a==='base'){setBase(b.dataset.k);b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));}
- else if(a==='clearcache'){try{Object.keys(localStorage).filter(k=>/^svl\.(tle\.|infra|tvv\.)/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(err){}toast('Sparad data rensad');}
+ else if(a==='clearcache'){try{Object.keys(localStorage).filter(k=>/^svl\.(tle\.|infra|tvv\.|windy)/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(err){}toast('Sparad data rensad');}
 });
 $('#sheetBody').addEventListener('change',e=>{
  const t=e.target;
@@ -1032,13 +1440,15 @@ function hideToast(){$('#toast').classList.remove('on','act');}
 /* ===== Kartklick: välj objekt ===== */
 map.on('click',e=>{
  if($('#sres').classList.contains('on')){closeSearch();return;}
+ if(streetMode&&e.latlng){streetAt(e.latlng.lat,e.latlng.lng);return;}
  const x=e.containerPoint.x,y=e.containerPoint.y,R=18;const f=[];
- for(const it of HITS){const dx=it._x-x,dy=it._y-y,d=dx*dx+dy*dy;if(d<=R*R)f.push([d,it]);}
+ for(const it of HITS){let d;if(it._pts&&it._pts.length>1){d=Infinity;for(let i=1;i<it._pts.length;i++)d=Math.min(d,segD2(x,y,it._pts[i-1],it._pts[i]));}else{const dx=it._x-x,dy=it._y-y;d=dx*dx+dy*dy;}if(d<=R*R)f.push([d,it]);}
  if(!f.length){if(sheetMode)closeSheet();return;}
  f.sort((a,b)=>a[0]-b[0]);const d0=Math.sqrt(f[0][0]);const near=f.filter(v=>Math.sqrt(v[0])<=d0+5).map(v=>v[1]);
  if(near.length>1)showMulti(near);else select(f[0][1],false);
 });
 
+function segD2(px,py,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;let t=l?((px-a.x)*dx+(py-a.y)*dy)/l:0;t=t<0?0:t>1?1:t;const qx=a.x+t*dx-px,qy=a.y+t*dy-py;return qx*qx+qy*qy;}
 /* ===== Efter ny data ===== */
 function afterData(id){
  if(sel&&sel.layer===id){const n=ST[id].byId.get(sel.id);if(n){sel.item=n;if(id==='sats')computeTrack(n);refreshDetail();if(follow){const p=posOf(n,Date.now());map.panTo([p.lat,p.lon]);}}}
@@ -1070,6 +1480,7 @@ uiAll();
 for(const id of PANEL_ORDER)if(ST[id].on)refresh(id,true);
 readHash();
 if(!SET.tvKey&&ST.cameras.on&&!LS.get('hint.key',false))setTimeout(()=>{toast('Lägg till en gratis Trafikverket-nyckel för att se kameror',{label:'Lägg till',fn:()=>openSheet('settings',settingsHtml())});LS.set('hint.key',true);},2200);
+if(!SET.wKey&&ST.webcams.on&&!LS.get('hint.wkey',false))setTimeout(()=>{toast('Fler kameror: lägg till en gratis Windy-nyckel',{label:'Lägg till',fn:()=>openSheet('settings',settingsHtml())});LS.set('hint.wkey',true);},3000);
 window.__svl={ST,SET,map,select,refresh,propagate,parseTLE,inSwe,toggleLayer,openSheet,layersHtml,settingsHtml,favsHtml,aboutHtml,doSearch,get HITS(){return HITS;}};
 })();
 </script>
